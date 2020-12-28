@@ -1,0 +1,118 @@
+<HTML>
+    <head>
+        <link rel="stylesheet" href="./css/workspace.css">
+    </head>
+    <BODY>
+        <canvas width='500' height='500' id="canv"> </canvas>
+        <h3 id="suggest">Pyramid Shape</h3>
+        </canvas>
+        <script>
+            var canvas = document.getElementById('canv');
+            var ctx = canvas.getContext('2d');
+            let x0 = 10;
+            let y0 = 10;
+            let x1 = 157;
+            let y1 = 127;
+    
+            function line(ctx, x0, y0, x1, y1) {
+                let delta = 2 * (y1 - y0);
+                let eps = 0;
+                let y = y0;
+                let scale = 1;
+    
+                for (let x = x0; x < x1; x++) {
+                    if (eps >= (x1 - x0)) {
+                        y += 1;
+                        eps -= 2 * (x1 - x0);
+                    }
+                    eps += delta;
+                    ctx.fillRect(x * scale, y * scale, scale * 1, scale * 1);
+                }
+            }
+    
+            class Point {
+                constructor(x, y) {
+                    this.x = x;
+                    this.y = y;
+                }
+            }
+    
+            function fillTriangle(ctx, points, color) {
+                ctx.fillStyle = color;
+                let miny = points[0].y, maxy = points[0].y;
+                for (let i = 1; i < points.length; i++) {
+                    if (points[i].y > maxy) maxy = points[i].y;
+                    if (points[i].y < miny) miny = points[i].y;
+                }
+    
+                let yarray = [];
+                for (let i = 0; i < points.length; i++) {
+                    let p = 0;
+                    if (i != points.length - 1) p = i + 1;
+                    let hi, lo;
+                    if (points[i].y > points[p].y) { hi = i; lo = p; }
+                    else if (points[i].y < points[p].y) { hi = p; lo = i; }
+                    else continue;
+    
+                    if (points[hi].x == points[lo].x) {
+                        for (let j = points[lo].y; j < points[hi].y; j++) {
+                            if (typeof yarray[j] == 'undefined') yarray[j] = [];
+                            yarray[j].push(points[lo].x);
+                        }
+                    } else {
+                        let k = (points[hi].y - points[lo].y) /
+                            (points[hi].x - points[lo].x);
+                        for (let j = points[lo].y; j < points[hi].y; j++) {
+                            if (typeof yarray[j] == 'undefined') yarray[j] = [];
+                            yarray[j].push((j - points[lo].y) / k + points[lo].x);
+                        }
+                    }
+                }
+                let image_data = ctx.createImageData(500, 500);
+                for (let y = miny; y < maxy; y++) {
+                    if (typeof (yarray[y]) == "undefined") { yarray[y] = []; }
+                    let xarray = yarray[y].sort(function (a, b) { return a - b; });
+                    for (let j = 0; j < xarray.length / 2; j++) {
+                        for (let x = xarray[j * 2]; x < xarray[j * 2 + 1]; x++) {
+                            ctx.fillRect(Math.floor(x), y, 1, 1);
+    
+                            image_data.data[(y * 500 + Math.floor(x)) * 4 + 0] = 56;
+                            image_data.data[(y * 500 + Math.floor(x)) * 4 + 1] = 78;
+                            image_data.data[(y * 500 + Math.floor(x)) * 4 + 2] = 23;
+                            image_data.data[(y * 500 + Math.floor(x)) * 4 + 3] = 255;
+                        }
+                    }
+                }
+            }
+            let pyramid_v = [
+                [0, 0],
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 1],
+                [0.5, 0.5],
+            ];
+            let pyramid_f = [
+                [5, 2, 3],
+                [4, 5, 3],
+                [6, 3, 2],
+                [5, 6, 2],
+                [4, 6, 5],
+                [6, 4, 3],
+            ];
+            let x_offset = 150, y_offset = 150;
+            let scale = 200;
+            for (let f = 0; f < pyramid_f.length; f++) {
+                let points = [];
+                for (let i = 0; i < pyramid_f[f].length; i++) {
+                    let index = pyramid_f[f][i] - 1;
+                    points.push(new Point(scale * pyramid_v[index][0] + x_offset,
+                        scale * pyramid_v[index][1] + y_offset));
+                }
+                let color = "rgb(" + Math.random() * 255 + "," + Math.random() * 255 +
+                    "," + Math.random() * 255 + ")";
+                fillTriangle(ctx, points, color);
+            }
+        </script>
+    </BODY>
+    </HTML>
